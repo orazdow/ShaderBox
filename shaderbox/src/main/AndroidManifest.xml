@@ -35,6 +35,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".ImportActivity"
+                  android:label="@string/import_title"
+                  android:parentActivityName=".MainActivity" />
+
+        <activity android:name=".ExportActivity"
+                  android:label="@string/export_title"
+                  android:parentActivityName=".MainActivity" />
+
         <activity android:name=".ShaderEditorActivity"
                   android:exported="true"
                   android:parentActivityName=".MainActivity">

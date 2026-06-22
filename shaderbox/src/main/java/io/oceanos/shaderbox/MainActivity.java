@@ -67,6 +67,12 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
         if (itemId == R.id.action_new_shader) {
             adapter.newShader();
             return true;
+        } else if (itemId == R.id.action_import) {
+            startActivity(new Intent(MainActivity.this, ImportActivity.class));
+            return true;
+        } else if (itemId == R.id.action_export) {
+            startActivity(new Intent(MainActivity.this, ExportActivity.class));
+            return true;
         } else if (itemId == R.id.action_settings) {
             startActivity(new Intent(MainActivity.this, SettingsActivity.class));
             return true;
