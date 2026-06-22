@@ -21,7 +21,6 @@ import android.content.SharedPreferences;
 import android.os.*;
 import android.preference.PreferenceManager;
 import android.content.Intent;
-import android.database.Cursor;
 import android.text.*;
 import android.util.Log;
 import android.view.*;
@@ -30,16 +29,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.fragment.app.FragmentActivity;
 import io.oceanos.shaderbox.database.Shader;
-import io.oceanos.shaderbox.database.ShaderDatabase;
 import io.oceanos.shaderbox.dialog.ConfirmDeleteDialogFragment;
 import io.oceanos.shaderbox.dialog.PropertiesDialogFragment;
 import io.oceanos.shaderbox.dialog.ShaderDialogListener;
 import io.oceanos.shaderbox.opengl.CompileResult;
 import io.oceanos.shaderbox.opengl.ShaderGLView;
 import io.oceanos.shaderbox.opengl.ShaderRenderer;
+import io.oceanos.shaderbox.storage.ShaderDocument;
+import io.oceanos.shaderbox.storage.ShaderRepository;
 
 public class ShaderEditorActivity extends FragmentActivity implements ShaderDialogListener, Handler.Callback {
-    private ShaderDatabase database;
+    private ShaderRepository repository;
     private ShaderEditor editor;
     private ShaderGLView shaderView;
     private ShaderRenderer renderer;
@@ -95,24 +95,16 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
         String action = intent.getAction();
         String type = intent.getType();
 
-        ShaderDatabase database = new ShaderDatabase(getBaseContext());
+        repository = new ShaderRepository(getBaseContext());
         if (Intent.ACTION_SEND.equals(action) && type != null) {
-            if ("text/plain".equals(type)) {
+            if (ShaderDocument.MIME_TYPE_TEXT.equals(type)) {
                 String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-                long id = database.newShader();
-                Cursor cursor = database.findById(id);
-                if (cursor.moveToFirst()) shader = Shader.getValues(cursor);
-                cursor.close();
-                if (sharedText != null) shader.setText(sharedText);
-                else shader.setText("");
+                shader = repository.createShaderFromText(sharedText);
             }
         } else {
             long id = intent.getLongExtra("ID", 0);
-            Cursor cursor = database.findById(id);
-            if (cursor.moveToFirst()) shader = Shader.getValues(cursor);
-            cursor.close();
+            shader = repository.findById(id);
         }
-        database.close();
 
         setSymbolListener(R.id.action_tab, '\t');
         setSymbolListener(R.id.action_rpo, '(');
@@ -199,7 +191,6 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
     @Override
     public void onPause() {
         super.onPause();
-        database.close();
         shaderView.onPause();
         editor.onPause();
 
@@ -213,7 +204,7 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
     @Override
     public void onResume() {
         super.onResume();
-        database = new ShaderDatabase(getBaseContext());
+        repository = new ShaderRepository(getBaseContext());
         shaderView.onResume();
         editor.onResume();
 
@@ -251,16 +242,17 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
 
     private void shaderCopy() {
         shader.setName("Copy of " + shader.getName());
-        database.insert(shader.getContentValues());
+        repository.insert(shader);
         Toast.makeText(getBaseContext(),R.string.shader_copied,Toast.LENGTH_SHORT).show();
         finish();
     }
 
     private void shaderShare() {
+        ShaderDocument document = ShaderDocument.fromShader(shader);
         Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, shader.getText());
-        sendIntent.setType("text/plain");
+        sendIntent.putExtra(Intent.EXTRA_TEXT, document.getText());
+        sendIntent.setType(ShaderDocument.MIME_TYPE_TEXT);
         startActivity(Intent.createChooser(sendIntent, "Send shader text to..."));
     }
 
@@ -287,7 +279,7 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
     }
 
     public void onDelete(Shader shader) {
-        database.delete(shader.getId());
+        repository.delete(shader.getId());
         Toast.makeText(getBaseContext(),R.string.shader_deleted,Toast.LENGTH_SHORT).show();
         finish();
     }
@@ -322,7 +314,7 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
 
             case ShaderRenderer.THUMB_RESULT:
                 shader.setThumb((byte[])message.obj);
-                database.update(shader.getContentValues());
+                repository.update(shader);
                 // Render in preview is false
                 if (shader.getPreviewMode() == 0) {
                     shaderView.setRenderMode(ShaderGLView.RENDERMODE_WHEN_DIRTY);

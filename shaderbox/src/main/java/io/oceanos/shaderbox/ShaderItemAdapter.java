@@ -17,10 +17,8 @@
 package io.oceanos.shaderbox;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +26,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import io.oceanos.shaderbox.database.Shader;
-import io.oceanos.shaderbox.database.ShaderDatabase;
+import io.oceanos.shaderbox.storage.ShaderRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,23 +41,13 @@ public class ShaderItemAdapter extends BaseAdapter {
 
     public void fetchData() {
         shaders.clear();
-        ShaderDatabase database = new ShaderDatabase(context);
-        Cursor cursor = database.findAll();
-        while(cursor.moveToNext()) {
-            shaders.add(Shader.getValues(cursor));
-        }
-        cursor.close();
-        database.close();
+        shaders.addAll(new ShaderRepository(context).findAll());
         notifyDataSetChanged();
     }
 
     public void newShader() {
-        ShaderDatabase database = new ShaderDatabase(context);
-        long id = database.newShader();
-        Cursor cursor = database.findById(id);
-        if (cursor.moveToFirst()) shaders.add(0, Shader.getValues(cursor));
-        cursor.close();
-        database.close();
+        Shader shader = new ShaderRepository(context).createDefaultShader();
+        if (shader != null) shaders.add(0, shader);
         notifyDataSetChanged();
     }
 
