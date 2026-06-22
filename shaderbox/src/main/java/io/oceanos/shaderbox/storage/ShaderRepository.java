@@ -22,7 +22,9 @@ import io.oceanos.shaderbox.database.Shader;
 import io.oceanos.shaderbox.database.ShaderDatabase;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ShaderRepository {
     private final Context context;
@@ -102,29 +104,73 @@ public class ShaderRepository {
         }
     }
 
-    public ImportResult importBackup(List<Shader> shaders) {
+    public int countDuplicateNames(List<Shader> shaders) {
+        ShaderDatabase database = new ShaderDatabase(context);
+        Cursor cursor = database.findAll();
+        try {
+            Set<String> existingNames = new HashSet<String>();
+            while (cursor.moveToNext()) {
+                existingNames.add(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_NAME)));
+            }
+
+            int duplicates = 0;
+            for (Shader shader : shaders) {
+                if (existingNames.contains(shader.getName())) duplicates++;
+            }
+            return duplicates;
+        } finally {
+            cursor.close();
+            database.close();
+        }
+    }
+
+    public ImportResult importBackup(List<Shader> shaders, boolean replaceDuplicates) {
         ShaderDatabase database = new ShaderDatabase(context);
         int replaced = 0;
         int imported = 0;
+        int skipped = 0;
         try {
+            Set<String> existingNames = readExistingNames(database);
             for (Shader shader : shaders) {
-                replaced += database.deleteByName(shader.getName());
+                boolean duplicate = existingNames.contains(shader.getName());
+                if (duplicate && !replaceDuplicates) {
+                    skipped++;
+                    continue;
+                }
+
+                if (duplicate) replaced += database.deleteByName(shader.getName());
                 database.insertBackup(shader.getBackupContentValues());
+                existingNames.add(shader.getName());
                 imported++;
             }
-            return new ImportResult(imported, replaced);
+            return new ImportResult(imported, replaced, skipped);
         } finally {
             database.close();
+        }
+    }
+
+    private Set<String> readExistingNames(ShaderDatabase database) {
+        Cursor cursor = database.findAll();
+        try {
+            Set<String> names = new HashSet<String>();
+            while (cursor.moveToNext()) {
+                names.add(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_NAME)));
+            }
+            return names;
+        } finally {
+            cursor.close();
         }
     }
 
     public static class ImportResult {
         private final int imported;
         private final int replaced;
+        private final int skipped;
 
-        public ImportResult(int imported, int replaced) {
+        public ImportResult(int imported, int replaced, int skipped) {
             this.imported = imported;
             this.replaced = replaced;
+            this.skipped = skipped;
         }
 
         public int getImported() {
@@ -133,6 +179,10 @@ public class ShaderRepository {
 
         public int getReplaced() {
             return replaced;
+        }
+
+        public int getSkipped() {
+            return skipped;
         }
     }
 }

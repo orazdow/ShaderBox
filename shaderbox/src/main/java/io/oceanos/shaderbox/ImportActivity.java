@@ -17,7 +17,9 @@
 package io.oceanos.shaderbox;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -64,15 +66,47 @@ public class ImportActivity extends Activity {
 
         try {
             List<Shader> shaders = ShaderBackupDocument.read(getContentResolver(), uri);
-            ShaderRepository.ImportResult result = repository.importBackup(shaders);
-            Toast.makeText(
-                    this,
-                    getString(R.string.import_backup_success, result.getImported(), result.getReplaced()),
-                    Toast.LENGTH_LONG).show();
+            int duplicates = repository.countDuplicateNames(shaders);
+            if (duplicates > 0) {
+                showDuplicateDialog(shaders, duplicates);
+            } else {
+                importBackup(shaders, true);
+            }
         } catch (IOException e) {
             Toast.makeText(this, getString(R.string.import_backup_failed, e.getMessage()), Toast.LENGTH_LONG).show();
         } catch (JSONException e) {
             Toast.makeText(this, getString(R.string.import_backup_failed, e.getMessage()), Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void showDuplicateDialog(final List<Shader> shaders, int duplicates) {
+        new AlertDialog.Builder(this)
+                .setMessage(getString(R.string.import_duplicates_found, duplicates))
+                .setPositiveButton(R.string.replace, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        importBackup(shaders, true);
+                    }
+                })
+                .setNegativeButton(R.string.skip, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        importBackup(shaders, false);
+                    }
+                })
+                .setNeutralButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void importBackup(List<Shader> shaders, boolean replaceDuplicates) {
+        ShaderRepository.ImportResult result = repository.importBackup(shaders, replaceDuplicates);
+        Toast.makeText(
+                this,
+                getString(
+                        R.string.import_backup_success,
+                        result.getImported(),
+                        result.getReplaced(),
+                        result.getSkipped()),
+                Toast.LENGTH_LONG).show();
     }
 }
