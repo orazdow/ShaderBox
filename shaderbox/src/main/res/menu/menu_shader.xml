@@ -14,23 +14,22 @@
 *    limitations under the License.
 -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@+id/action_delete_shader"
         android:title="@string/delete"
-        app:showAsAction="never" />
+        android:showAsAction="never" />
 
     <item android:id="@+id/action_copy_shader"
         android:title="@string/copy"
-        app:showAsAction="never" />
+        android:showAsAction="never" />
 
     <item android:id="@+id/action_share_shader"
         android:title="@string/share"
-        app:showAsAction="never" />
+        android:showAsAction="never" />
 
     <item android:id="@+id/action_properties_shader"
         android:title="@string/properties"
-        app:showAsAction="never" />
+        android:showAsAction="never" />
 
 </menu>

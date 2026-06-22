@@ -19,7 +19,7 @@
     android:layout_height="wrap_content" >
     <!-- The CardView needs to be wrapped to ensure spacing is applied correctly. -->
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         style="@style/Widget.ShaderDashboard.Card"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
@@ -52,6 +52,6 @@
 
         </RelativeLayout>
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
 
 </FrameLayout>

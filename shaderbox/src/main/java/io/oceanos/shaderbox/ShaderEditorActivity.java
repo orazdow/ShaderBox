@@ -20,7 +20,6 @@ import android.app.ActionBar;
 import android.content.SharedPreferences;
 import android.os.*;
 import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentActivity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.text.*;
@@ -29,6 +28,7 @@ import android.view.*;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.fragment.app.FragmentActivity;
 import io.oceanos.shaderbox.database.Shader;
 import io.oceanos.shaderbox.database.ShaderDatabase;
 import io.oceanos.shaderbox.dialog.ConfirmDeleteDialogFragment;
@@ -179,11 +179,19 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_delete_shader: shaderDelete(); return true;
-            case R.id.action_copy_shader: shaderCopy(); return true;
-            case R.id.action_share_shader: shaderShare(); return true;
-            case R.id.action_properties_shader: shaderProperties(); return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_delete_shader) {
+            shaderDelete();
+            return true;
+        } else if (itemId == R.id.action_copy_shader) {
+            shaderCopy();
+            return true;
+        } else if (itemId == R.id.action_share_shader) {
+            shaderShare();
+            return true;
+        } else if (itemId == R.id.action_properties_shader) {
+            shaderProperties();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

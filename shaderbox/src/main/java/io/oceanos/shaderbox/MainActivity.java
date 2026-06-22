@@ -18,10 +18,10 @@ package io.oceanos.shaderbox;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
+import androidx.fragment.app.FragmentActivity;
 import io.oceanos.shaderbox.dialog.AboutDialogFragment;
 
 public class MainActivity extends FragmentActivity implements AdapterView.OnItemClickListener {
@@ -63,17 +63,17 @@ public class MainActivity extends FragmentActivity implements AdapterView.OnItem
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_new_shader:
-                adapter.newShader();
-                return true;
-            case R.id.action_settings:
-                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
-                return true;
-            case R.id.action_about:
-                AboutDialogFragment about = new AboutDialogFragment();
-                about.show(getSupportFragmentManager(), "ShaderBox");
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_new_shader) {
+            adapter.newShader();
+            return true;
+        } else if (itemId == R.id.action_settings) {
+            startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+            return true;
+        } else if (itemId == R.id.action_about) {
+            AboutDialogFragment about = new AboutDialogFragment();
+            about.show(getSupportFragmentManager(), "ShaderBox");
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
