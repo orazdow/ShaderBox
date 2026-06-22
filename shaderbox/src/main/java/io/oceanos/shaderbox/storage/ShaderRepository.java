@@ -101,4 +101,38 @@ public class ShaderRepository {
             database.close();
         }
     }
+
+    public ImportResult importBackup(List<Shader> shaders) {
+        ShaderDatabase database = new ShaderDatabase(context);
+        int replaced = 0;
+        int imported = 0;
+        try {
+            for (Shader shader : shaders) {
+                replaced += database.deleteByName(shader.getName());
+                database.insertBackup(shader.getBackupContentValues());
+                imported++;
+            }
+            return new ImportResult(imported, replaced);
+        } finally {
+            database.close();
+        }
+    }
+
+    public static class ImportResult {
+        private final int imported;
+        private final int replaced;
+
+        public ImportResult(int imported, int replaced) {
+            this.imported = imported;
+            this.replaced = replaced;
+        }
+
+        public int getImported() {
+            return imported;
+        }
+
+        public int getReplaced() {
+            return replaced;
+        }
+    }
 }

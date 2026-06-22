@@ -180,6 +180,13 @@ public class ShaderDatabase extends SQLiteOpenHelper {
         return getWritableDatabase().insert(TABLE_SHADERS, null, cv);
 	}
 
+	public long insertBackup(ContentValues cv) {
+		cv.remove(COLUMN_ID);
+		if (!cv.containsKey(COLUMN_CREATED)) cv.put(COLUMN_CREATED, currentTime());
+		if (!cv.containsKey(COLUMN_MODIFIED)) cv.put(COLUMN_MODIFIED, currentTime());
+        return getWritableDatabase().insert(TABLE_SHADERS, null, cv);
+	}
+
 	public void update(ContentValues cv) {
 		cv.put( COLUMN_MODIFIED, currentTime());
 		long id = cv.getAsLong(COLUMN_ID);
@@ -188,6 +195,10 @@ public class ShaderDatabase extends SQLiteOpenHelper {
 
 	public void delete(long id) {
         getWritableDatabase().delete(TABLE_SHADERS, COLUMN_ID + "=" + id, null);
+	}
+
+	public int deleteByName(String name) {
+        return getWritableDatabase().delete(TABLE_SHADERS, COLUMN_NAME + " = ?", new String[]{name});
 	}
 
     public long newShader() {

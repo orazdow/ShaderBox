@@ -67,6 +67,12 @@ public class Shader implements Serializable {
         return cv;
     }
 
+    public ContentValues getBackupContentValues() {
+        ContentValues cv = getContentValues();
+        cv.put(ShaderDatabase.COLUMN_CREATED, created);
+        return cv;
+    }
+
     public long getId() {
         return id;
     }

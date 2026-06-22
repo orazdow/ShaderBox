@@ -62,6 +62,9 @@ github.com/ruigil/shaderbox\n</string>
     <!-- import/export placeholders -->
     <string name="import_title">Import</string>
     <string name="import_placeholder">Import workflow placeholder</string>
+    <string name="import_backup">Import Backup</string>
+    <string name="import_backup_success">Imported %1$d shaders, replaced %2$d existing shaders</string>
+    <string name="import_backup_failed">Import failed: %1$s</string>
     <string name="export_title">Export</string>
     <string name="export_placeholder">Export workflow placeholder</string>
     <string name="backup_all">Backup All</string>

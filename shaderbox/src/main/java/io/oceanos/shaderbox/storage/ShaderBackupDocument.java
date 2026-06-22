@@ -25,8 +25,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -48,6 +51,24 @@ public class ShaderBackupDocument {
         } finally {
             out.close();
         }
+    }
+
+    public static List<Shader> read(ContentResolver resolver, Uri uri)
+            throws IOException, JSONException {
+        JSONObject root = new JSONObject(readText(resolver, uri));
+        if (!FORMAT.equals(root.getString("format"))) {
+            throw new JSONException("Unsupported backup format");
+        }
+        if (root.getInt("version") != VERSION) {
+            throw new JSONException("Unsupported backup version");
+        }
+
+        JSONArray items = root.getJSONArray("shaders");
+        List<Shader> shaders = new ArrayList<Shader>();
+        for (int i = 0; i < items.length(); i++) {
+            shaders.add(fromJson(items.getJSONObject(i)));
+        }
+        return shaders;
     }
 
     private static JSONObject toJson(List<Shader> shaders) throws JSONException {
@@ -77,9 +98,43 @@ public class ShaderBackupDocument {
         return item;
     }
 
+    private static Shader fromJson(JSONObject item) throws JSONException {
+        Shader shader = new Shader();
+        shader.setName(item.getString("name"));
+        shader.setText(item.getString("shader"));
+        shader.setVrMode(item.getInt("vrmode"));
+        shader.setPreviewMode(item.getInt("previewmode"));
+        shader.setResolution(item.getInt("resolution"));
+        shader.setCreated(item.optString("created", null));
+        shader.setModified(item.optString("modified", null));
+        shader.setThumb(decodeThumb(item.optString("thumb", "")));
+        return shader;
+    }
+
     private static String encodeThumb(byte[] thumb) {
         if (thumb == null || thumb.length == 0) return "";
         return Base64.encodeToString(thumb, Base64.NO_WRAP);
+    }
+
+    private static byte[] decodeThumb(String thumb) {
+        if (thumb == null || thumb.length() == 0) return new byte[0];
+        return Base64.decode(thumb, Base64.DEFAULT);
+    }
+
+    private static String readText(ContentResolver resolver, Uri uri) throws IOException {
+        InputStream in = resolver.openInputStream(uri);
+        if (in == null) throw new IOException("Unable to read backup document");
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            for (int r; (r = in.read(buffer)) != -1; ) {
+                out.write(buffer, 0, r);
+            }
+            return out.toString("UTF-8");
+        } finally {
+            in.close();
+        }
     }
 
     private static String currentUtcTime() {
