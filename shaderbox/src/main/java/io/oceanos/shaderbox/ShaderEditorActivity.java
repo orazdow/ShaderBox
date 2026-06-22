@@ -60,10 +60,9 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
                 new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (result.isSuccess()) onView(shader);
+                        if (result == null || result.isSuccess()) onView(shader);
                         else {
                             Toast errorMsg = Toast.makeText(getBaseContext(),result.getError(),Toast.LENGTH_LONG);
-                            errorMsg.getView().setBackgroundColor(getResources().getColor(R.color.editor_color_error));
                             errorMsg.show();
                         }
                     }

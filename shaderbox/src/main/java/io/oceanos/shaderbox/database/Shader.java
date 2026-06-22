@@ -36,6 +36,7 @@ public class Shader implements Serializable {
     private int previewMode;
     private int resolution;
     private byte[] thumb;
+    private String created;
     private String modified;
 
 
@@ -48,6 +49,7 @@ public class Shader implements Serializable {
         shader.setResolution(cursor.getInt(cursor.getColumnIndex(ShaderDatabase.COLUMN_RESOLUTION)));
         shader.setThumb(cursor.getBlob(cursor.getColumnIndex(ShaderDatabase.COLUMN_THUMB)));
         shader.setText(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_SHADER)));
+        shader.setCreated(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_CREATED)));
         shader.setModified(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_MODIFIED)));
         return shader;
     }
@@ -115,6 +117,14 @@ public class Shader implements Serializable {
 
     public String getModified() {
         return modified;
+    }
+
+    public String getCreated() {
+        return created;
+    }
+
+    public void setCreated(String created) {
+        this.created = created;
     }
 
     public void setModified(String modified) {

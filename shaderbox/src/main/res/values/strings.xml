@@ -64,6 +64,10 @@ github.com/ruigil/shaderbox\n</string>
     <string name="import_placeholder">Import workflow placeholder</string>
     <string name="export_title">Export</string>
     <string name="export_placeholder">Export workflow placeholder</string>
+    <string name="backup_all">Backup All</string>
+    <string name="backup_all_placeholder">Backup all workflow placeholder</string>
+    <string name="backup_all_success">Backed up %1$d shaders</string>
+    <string name="backup_all_failed">Backup failed: %1$s</string>
 
     <!-- shader menu -->
     <string name="delete">Delete shader</string>
