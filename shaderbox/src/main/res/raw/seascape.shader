@@ -18,7 +18,6 @@ uniform mat4 eye;
 const int NUM_STEPS = 8;
 const float PI	 	= 3.1415;
 const float EPSILON	= 1e-3;
-float EPSILON_NRM	= 0.1 / resolution.x;
 
 // sea
 const int ITER_GEOMETRY = 3;
@@ -29,7 +28,6 @@ const float SEA_SPEED = 0.8;
 const float SEA_FREQ = 0.16;
 const vec3 SEA_BASE = vec3(0.1,0.19,0.22);
 const vec3 SEA_WATER_COLOR = vec3(0.8,0.9,0.6);
-float SEA_TIME = time * SEA_SPEED;
 mat2 octave_m = mat2(1.6,1.2,-1.2,1.6);
 
 // math
@@ -93,8 +91,9 @@ float map(vec3 p) {
 
     float d, h = 0.0;
     for(int i = 0; i < ITER_GEOMETRY; i++) {
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-    	d += sea_octave((uv-SEA_TIME)*freq,choppy);
+        float sea_time = time * SEA_SPEED;
+    	d = sea_octave((uv+sea_time)*freq,choppy);
+    	d += sea_octave((uv-sea_time)*freq,choppy);
         h += d * amp;
     	uv *= octave_m; freq *= 1.9; amp *= 0.22;
         choppy = mix(choppy,1.0,0.2);
@@ -110,8 +109,9 @@ float map_detailed(vec3 p) {
 
     float d, h = 0.0;
     for(int i = 0; i < ITER_FRAGMENT; i++) {
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-    	d += sea_octave((uv-SEA_TIME)*freq,choppy);
+        float sea_time = time * SEA_SPEED;
+    	d = sea_octave((uv+sea_time)*freq,choppy);
+    	d += sea_octave((uv-sea_time)*freq,choppy);
         h += d * amp;
     	uv *= octave_m; freq *= 1.9; amp *= 0.22;
         choppy = mix(choppy,1.0,0.2);
@@ -189,7 +189,8 @@ void main() {
     vec3 p;
     heightMapTracing(ori,dir,p);
     vec3 dist = p - ori;
-    vec3 n = getNormal(p, dot(dist,dist) * EPSILON_NRM);
+    float epsilon_nrm = 0.1 / resolution.x;
+    vec3 n = getNormal(p, dot(dist,dist) * epsilon_nrm);
     vec3 light = normalize(vec3(0.0,1.0,0.8));
 
     // color
