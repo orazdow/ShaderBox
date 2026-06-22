@@ -17,7 +17,11 @@
 package io.oceanos.shaderbox;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.*;
 import android.preference.PreferenceManager;
 import android.content.Intent;
@@ -61,10 +65,7 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
                     @Override
                     public void onClick(View v) {
                         if (result == null || result.isSuccess()) onView(shader);
-                        else {
-                            Toast errorMsg = Toast.makeText(getBaseContext(),result.getError(),Toast.LENGTH_LONG);
-                            errorMsg.show();
-                        }
+                        else showCompileError(result.getError());
                     }
                 });
         shaderActionSave.setOnClickListener(
@@ -158,6 +159,34 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
                 editor.getText().insert(editor.getSelectionStart(), String.valueOf(c));
             }
         });
+    }
+
+    private void showCompileError(String error) {
+        TextView message = new TextView(this);
+        message.setText(error);
+        message.setTextColor(Color.WHITE);
+        message.setTextIsSelectable(true);
+        message.setTextSize(12);
+        message.setTypeface(android.graphics.Typeface.MONOSPACE);
+        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        message.setPadding(padding, padding, padding, padding);
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setBackgroundResource(R.drawable.error_popup_background);
+        scrollView.setMinimumHeight((int) (96 * getResources().getDisplayMetrics().density));
+        scrollView.addView(message);
+
+        Dialog dialog = new AlertDialog.Builder(this)
+                .setView(scrollView)
+                .setPositiveButton(R.string.ok, null)
+                .create();
+        dialog.setOnShowListener(dialogInterface -> {
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.getWindow().setDimAmount(0.2f);
+            }
+        });
+        dialog.show();
     }
 
     @Override
