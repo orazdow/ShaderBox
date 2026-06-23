@@ -29,9 +29,14 @@ import io.oceanos.shaderbox.database.Shader;
 import io.oceanos.shaderbox.opengl.ShaderGLView;
 import io.oceanos.shaderbox.opengl.ShaderRenderer;
 
+import java.lang.reflect.Field;
+
 public class ShaderRenderActivity extends CardboardActivity {
+    private static final String TAG = "ShaderRenderActivity";
+
     private ShaderGLView shaderView;
     private Vibrator vibrator;
+    private boolean cardboardNfcDisabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +55,14 @@ public class ShaderRenderActivity extends CardboardActivity {
 
     @Override
     protected void onPause() {
+        disableCardboardNfc();
         super.onPause();
         shaderView.onPause();
     }
 
     @Override
     protected void onResume() {
+        disableCardboardNfc();
         super.onResume();
         shaderView.onResume();
     }
@@ -73,5 +80,20 @@ public class ShaderRenderActivity extends CardboardActivity {
         vibrator.vibrate(50);
     }
 
+    private void disableCardboardNfc() {
+        if (cardboardNfcDisabled) {
+            return;
+        }
+
+        try {
+            Object nfcSensor = getNfcSensor();
+            Field nfcAdapter = nfcSensor.getClass().getDeclaredField("nfcAdapter");
+            nfcAdapter.setAccessible(true);
+            nfcAdapter.set(nfcSensor, null);
+            cardboardNfcDisabled = true;
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            Log.w(TAG, "Unable to disable Cardboard NFC", exception);
+        }
+    }
 
 }
