@@ -125,18 +125,20 @@ public class ShaderRepository {
         return copyName;
     }
 
-    public int countDuplicateNames(List<Shader> shaders) {
+    public int countDuplicateShaders(List<Shader> shaders) {
         ShaderDatabase database = new ShaderDatabase(context);
         Cursor cursor = database.findAll();
         try {
-            Set<String> existingNames = new HashSet<String>();
+            Set<String> existingTexts = new HashSet<String>();
             while (cursor.moveToNext()) {
-                existingNames.add(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_NAME)));
+                existingTexts.add(shaderTextKey(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_SHADER))));
             }
 
             int duplicates = 0;
             for (Shader shader : shaders) {
-                if (existingNames.contains(shader.getName())) duplicates++;
+                String shaderText = shaderTextKey(shader.getText());
+                if (existingTexts.contains(shaderText)) duplicates++;
+                else existingTexts.add(shaderText);
             }
             return duplicates;
         } finally {
@@ -151,17 +153,18 @@ public class ShaderRepository {
         int imported = 0;
         int skipped = 0;
         try {
-            Set<String> existingNames = readExistingNames(database);
+            Set<String> existingTexts = readExistingShaderTexts(database);
             for (Shader shader : shaders) {
-                boolean duplicate = existingNames.contains(shader.getName());
+                String shaderText = shaderTextKey(shader.getText());
+                boolean duplicate = existingTexts.contains(shaderText);
                 if (duplicate && !replaceDuplicates) {
                     skipped++;
                     continue;
                 }
 
-                if (duplicate) replaced += database.deleteByName(shader.getName());
+                if (duplicate) replaced += database.deleteByShader(shader.getText());
                 database.insertBackup(shader.getBackupContentValues());
-                existingNames.add(shader.getName());
+                existingTexts.add(shaderText);
                 imported++;
             }
             return new ImportResult(imported, replaced, skipped);
@@ -170,17 +173,22 @@ public class ShaderRepository {
         }
     }
 
-    private Set<String> readExistingNames(ShaderDatabase database) {
+    private Set<String> readExistingShaderTexts(ShaderDatabase database) {
         Cursor cursor = database.findAll();
         try {
-            Set<String> names = new HashSet<String>();
+            Set<String> shaderTexts = new HashSet<String>();
             while (cursor.moveToNext()) {
-                names.add(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_NAME)));
+                shaderTexts.add(shaderTextKey(cursor.getString(cursor.getColumnIndex(ShaderDatabase.COLUMN_SHADER))));
             }
-            return names;
+            return shaderTexts;
         } finally {
             cursor.close();
         }
+    }
+
+    private String shaderTextKey(String text) {
+        if (text == null) return "";
+        return text;
     }
 
     private String copyBaseName(String name) {

@@ -201,6 +201,10 @@ public class ShaderDatabase extends SQLiteOpenHelper {
         return getWritableDatabase().delete(TABLE_SHADERS, COLUMN_NAME + " = ?", new String[]{name});
 	}
 
+	public int deleteByShader(String shader) {
+        return getWritableDatabase().delete(TABLE_SHADERS, COLUMN_SHADER + " = ?", new String[]{shader});
+	}
+
     public long newShader() {
 		ContentValues cv = new ContentValues();
 		cv.put(COLUMN_NAME, "New Shader" );

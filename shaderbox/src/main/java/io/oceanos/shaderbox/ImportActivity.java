@@ -66,7 +66,7 @@ public class ImportActivity extends Activity {
 
         try {
             List<Shader> shaders = ShaderBackupDocument.read(getContentResolver(), uri);
-            int duplicates = repository.countDuplicateNames(shaders);
+            int duplicates = repository.countDuplicateShaders(shaders);
             if (duplicates > 0) {
                 showDuplicateDialog(shaders, duplicates);
             } else {
