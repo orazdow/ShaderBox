@@ -219,6 +219,10 @@ public class ShaderRenderer implements CardboardView.StereoRenderer {
 
     // ------------- public utility methods ------------------------
     public void resetShader() {
+        resetShader(true);
+    }
+
+    private void resetShader(boolean resetTiming) {
 
         resolution[0] = this.width/shader.getResolution();
         resolution[1] = this.height/shader.getResolution();
@@ -242,10 +246,12 @@ public class ShaderRenderer implements CardboardView.StereoRenderer {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 
-        // reset fps
-        startTime = SystemClock.elapsedRealtime();
-        frameCount = 0;
-        resetted = true;
+        if (resetTiming) {
+            // reset fps
+            startTime = SystemClock.elapsedRealtime();
+            frameCount = 0;
+            resetted = true;
+        }
     }
 
     public void onTouch( float x, float y ) {
@@ -262,26 +268,21 @@ public class ShaderRenderer implements CardboardView.StereoRenderer {
     }
 
     public void compileRequest() {
-        CompileResult result;
-        String fragmentShader = shader.getText();
-        int program = compileShaderProgram(VERTEX_SHADER, fragmentShader);
-
-        if (program == 0) result = new CompileResult(false,error);
-        else {
-            int previousProgram = programShaderId;
-            programShaderId = program;
-            positionLoc = GLES20.glGetAttribLocation(programShaderId, "position");
-            timeLoc = GLES20.glGetUniformLocation(programShaderId, "time");
-            resolutionLoc = GLES20.glGetUniformLocation(programShaderId, "resolution" );
-            mouseLoc = GLES20.glGetUniformLocation(programShaderId, "mouse");
-            eyeLoc = GLES20.glGetUniformLocation(programShaderId, "eye");
-            GLES20.glDeleteProgram(previousProgram);
-            checkGlError("deleteProgram");
-
-            result = new CompileResult(true,"");
-        }
-
+        CompileResult result = compileCurrentShader();
         uiHandler.sendMessage(uiHandler.obtainMessage(COMPILE_RESULT,result));
+    }
+
+    public void saveRequest() {
+        CompileResult result = compileCurrentShader();
+        uiHandler.sendMessage(uiHandler.obtainMessage(COMPILE_RESULT, result));
+
+        if (result.isSuccess()) {
+            renderThumbnailFrame();
+            thumbRequest();
+        } else {
+            byte[] thumb = shader.getThumb();
+            uiHandler.sendMessage(uiHandler.obtainMessage(THUMB_RESULT, thumb != null ? thumb : new byte[0]));
+        }
     }
 
     public void thumbRequest() {
@@ -347,6 +348,55 @@ public class ShaderRenderer implements CardboardView.StereoRenderer {
             checkGlError("deleteShader");
             return 0;
         }
+    }
+
+    private CompileResult compileCurrentShader() {
+        String fragmentShader = shader.getText();
+        int program = compileShaderProgram(VERTEX_SHADER, fragmentShader);
+
+        if (program == 0) return new CompileResult(false,error);
+
+        int previousProgram = programShaderId;
+        programShaderId = program;
+        positionLoc = GLES20.glGetAttribLocation(programShaderId, "position");
+        timeLoc = GLES20.glGetUniformLocation(programShaderId, "time");
+        resolutionLoc = GLES20.glGetUniformLocation(programShaderId, "resolution" );
+        mouseLoc = GLES20.glGetUniformLocation(programShaderId, "mouse");
+        eyeLoc = GLES20.glGetUniformLocation(programShaderId, "eye");
+        GLES20.glDeleteProgram(previousProgram);
+        checkGlError("deleteProgram");
+
+        return new CompileResult(true,"");
+    }
+
+    private void renderThumbnailFrame() {
+        if (programShaderId == 0) {
+            return;
+        }
+
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, frameBufferId);
+        GLES20.glViewport(0, 0, (int) resolution[0], (int) resolution[1]);
+        GLES20.glUseProgram(programShaderId);
+
+        GLES20.glVertexAttribPointer(positionLoc, 2, GLES20.GL_BYTE, false, 0, vertexBuffer);
+        GLES20.glEnableVertexAttribArray(positionLoc);
+
+        if( timeLoc > -1 ) {
+            float elapsedTime = (SystemClock.elapsedRealtime() - startTime) / 1000f;
+            GLES20.glUniform1f(timeLoc, elapsedTime);
+        }
+
+        if( resolutionLoc > -1 ) GLES20.glUniform2fv(resolutionLoc, 1, resolution, 0);
+
+        if( mouseLoc > -1) GLES20.glUniform2fv(mouseLoc, 1, touch, 0);
+
+        if( eyeLoc > -1) {
+            android.opengl.Matrix.setIdentityM(eyeView, 0);
+            GLES20.glUniformMatrix4fv(eyeLoc, 1, false, eyeView, 0);
+        }
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, defaultFramebufferId);
     }
 
     private int loadShader( int type, String src ) {

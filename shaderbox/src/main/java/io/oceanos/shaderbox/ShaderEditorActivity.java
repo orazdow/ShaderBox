@@ -270,6 +270,7 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
 
     private void shaderCopy() {
         shader.setName("Copy of " + shader.getName());
+        shader.setThumb(new byte[0]);
         repository.insert(shader);
         Toast.makeText(getBaseContext(),R.string.shader_copied,Toast.LENGTH_SHORT).show();
         finish();
@@ -296,13 +297,8 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
             tUpdateFPS = null;
         }
 
-        shaderView.queueEvent(thumbRequest);
-        shaderView.queueEvent(resetShader);
-        // compile on save
-        if (!compileRT) {
-            shader.setText(editor.getText().toString());
-            shaderView.queueEvent(compileRequest);
-        }
+        shader.setText(editor.getText().toString());
+        shaderView.queueEvent(saveRequest);
 
     }
 
@@ -378,10 +374,10 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
         }
     };
 
-    private final Runnable thumbRequest = new Runnable() {
+    private final Runnable saveRequest = new Runnable() {
         @Override
         public void run() {
-            renderer.thumbRequest();
+            renderer.saveRequest();
         }
     };
 
