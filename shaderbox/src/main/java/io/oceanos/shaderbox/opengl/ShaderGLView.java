@@ -23,6 +23,7 @@ import com.google.vrtoolkit.cardboard.CardboardView;
 
 public class ShaderGLView extends CardboardView {
     ShaderRenderer renderer;
+    private TouchListener touchListener;
 
     public ShaderGLView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -31,6 +32,10 @@ public class ShaderGLView extends CardboardView {
     public void setRenderer(ShaderRenderer renderer) {
         super.setRenderer(renderer);
         this.renderer = renderer;
+    }
+
+    public void setTouchListener(TouchListener touchListener) {
+        this.touchListener = touchListener;
     }
 
     @Override
@@ -42,11 +47,15 @@ public class ShaderGLView extends CardboardView {
             @Override
             public void run() {
                 renderer.onTouch(x,y);
+                if (touchListener != null) {
+                    touchListener.onTouch(renderer.getTouchX(), renderer.getTouchY());
+                }
             }
         });
         return true;
     }
 
-
-
+    public interface TouchListener {
+        void onTouch(float x, float y);
+    }
 }

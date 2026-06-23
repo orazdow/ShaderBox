@@ -25,8 +25,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ShaderRepository {
+    private static final Pattern COPY_PREFIX_PATTERN = Pattern.compile("^(Copy of\\s+)+", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NUMBER_SUFFIX_PATTERN = Pattern.compile("^(.*)\\s+\\((\\d+)\\)$");
+
     private final Context context;
 
     public ShaderRepository(Context context) {
@@ -104,6 +109,22 @@ public class ShaderRepository {
         }
     }
 
+    public String nextCopyName(String name) {
+        String baseName = copyBaseName(name);
+        Set<String> existingNames = new HashSet<String>();
+        for (Shader shader : findAll()) {
+            existingNames.add(shader.getName());
+        }
+
+        int suffix = 1;
+        String copyName;
+        do {
+            copyName = baseName + " (" + suffix + ")";
+            suffix++;
+        } while (existingNames.contains(copyName));
+        return copyName;
+    }
+
     public int countDuplicateNames(List<Shader> shaders) {
         ShaderDatabase database = new ShaderDatabase(context);
         Cursor cursor = database.findAll();
@@ -160,6 +181,17 @@ public class ShaderRepository {
         } finally {
             cursor.close();
         }
+    }
+
+    private String copyBaseName(String name) {
+        String baseName = name != null ? name.trim() : "";
+        baseName = COPY_PREFIX_PATTERN.matcher(baseName).replaceFirst("").trim();
+
+        Matcher matcher = NUMBER_SUFFIX_PATTERN.matcher(baseName);
+        if (matcher.matches()) baseName = matcher.group(1).trim();
+
+        if (baseName.length() == 0) return "Shader";
+        return baseName;
     }
 
     public static class ImportResult {

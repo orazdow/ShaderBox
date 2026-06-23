@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.text.*;
 import android.util.Log;
 import android.view.*;
+import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,6 +40,7 @@ import io.oceanos.shaderbox.dialog.ShaderDialogListener;
 import io.oceanos.shaderbox.opengl.CompileResult;
 import io.oceanos.shaderbox.opengl.ShaderGLView;
 import io.oceanos.shaderbox.opengl.ShaderRenderer;
+import io.oceanos.shaderbox.opengl.ShaderTouchState;
 import io.oceanos.shaderbox.storage.ShaderDocument;
 import io.oceanos.shaderbox.storage.ShaderRepository;
 
@@ -206,6 +208,9 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
         } else if (itemId == R.id.action_copy_shader) {
             shaderCopy();
             return true;
+        } else if (itemId == R.id.action_rename_shader) {
+            shaderRename();
+            return true;
         } else if (itemId == R.id.action_share_shader) {
             shaderShare();
             return true;
@@ -235,6 +240,12 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
         repository = new ShaderRepository(getBaseContext());
         shaderView.onResume();
         editor.onResume();
+        shaderView.queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                ShaderTouchState.applyTo(getBaseContext(), shader.getId(), renderer);
+            }
+        });
 
         if (shader.getPreviewMode() == 0) {
             shaderView.setRenderMode(ShaderGLView.RENDERMODE_WHEN_DIRTY);
@@ -269,11 +280,34 @@ public class ShaderEditorActivity extends FragmentActivity implements ShaderDial
     }
 
     private void shaderCopy() {
-        shader.setName("Copy of " + shader.getName());
+        shader.setName(repository.nextCopyName(shader.getName()));
         shader.setThumb(new byte[0]);
         repository.insert(shader);
         Toast.makeText(getBaseContext(),R.string.shader_copied,Toast.LENGTH_SHORT).show();
         finish();
+    }
+
+    private void shaderRename() {
+        final EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setText(shader.getName());
+        input.selectAll();
+
+        int padding = (int) (20 * getResources().getDisplayMetrics().density);
+        input.setPadding(padding, 0, padding, 0);
+
+        new AlertDialog.Builder(this)
+                .setView(input)
+                .setPositiveButton(R.string.save, (dialog, which) -> {
+                    String name = input.getText().toString().trim();
+                    if (name.length() == 0) return;
+
+                    shader.setName(name);
+                    repository.update(shader);
+                    Toast.makeText(getBaseContext(), R.string.shader_renamed, Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     private void shaderShare() {

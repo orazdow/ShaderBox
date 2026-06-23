@@ -78,6 +78,8 @@ github.com/ruigil/shaderbox\n</string>
     <!-- shader menu -->
     <string name="delete">Delete shader</string>
     <string name="copy">Copy as new shader</string>
+    <string name="rename">Rename shader</string>
+    <string name="shader_renamed">Shader was renamed</string>
     <string name="action_share_shader">Share shader</string>
     <string name="share">Share shader</string>
     <string name="properties">Shader properties</string>

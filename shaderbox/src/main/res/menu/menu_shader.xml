@@ -24,6 +24,10 @@
         android:title="@string/copy"
         android:showAsAction="never" />
 
+    <item android:id="@+id/action_rename_shader"
+        android:title="@string/rename"
+        android:showAsAction="never" />
+
     <item android:id="@+id/action_share_shader"
         android:title="@string/share"
         android:showAsAction="never" />

@@ -28,6 +28,7 @@ import com.google.vrtoolkit.cardboard.CardboardActivity;
 import io.oceanos.shaderbox.database.Shader;
 import io.oceanos.shaderbox.opengl.ShaderGLView;
 import io.oceanos.shaderbox.opengl.ShaderRenderer;
+import io.oceanos.shaderbox.opengl.ShaderTouchState;
 
 import java.lang.reflect.Field;
 
@@ -37,6 +38,7 @@ public class ShaderRenderActivity extends CardboardActivity {
     private ShaderGLView shaderView;
     private Vibrator vibrator;
     private boolean cardboardNfcDisabled;
+    private Shader shader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,9 +48,15 @@ public class ShaderRenderActivity extends CardboardActivity {
         shaderView = (ShaderGLView) findViewById(R.id.render_view);
         setCardboardView(shaderView);
 
-        Shader shader = (Shader)getIntent().getSerializableExtra("shader");
+        shader = (Shader)getIntent().getSerializableExtra("shader");
         ShaderRenderer renderer = new ShaderRenderer(shader,new Handler());
         shaderView.setRenderer(renderer);
+        shaderView.setTouchListener(new ShaderGLView.TouchListener() {
+            @Override
+            public void onTouch(float x, float y) {
+                ShaderTouchState.save(getBaseContext(), shader.getId(), x, y);
+            }
+        });
         shaderView.setVRModeEnabled(shader.getVrMode() == 1);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
     }

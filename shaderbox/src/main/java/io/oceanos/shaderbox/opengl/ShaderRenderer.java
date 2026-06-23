@@ -262,6 +262,19 @@ public class ShaderRenderer implements CardboardView.StereoRenderer {
         touch[1] = 1-yscale/resolution[1];
     }
 
+    public void setTouch(float x, float y) {
+        touch[0] = x;
+        touch[1] = y;
+    }
+
+    public float getTouchX() {
+        return touch[0];
+    }
+
+    public float getTouchY() {
+        return touch[1];
+    }
+
     public void fpsRequest() {
         float fps = frameCount*1000f/(SystemClock.elapsedRealtime()-startTime);
         uiHandler.sendMessage(uiHandler.obtainMessage(FPS_RESULT, fps));
